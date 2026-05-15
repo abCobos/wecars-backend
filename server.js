@@ -52,8 +52,9 @@ app.get("/autos", async (req, res) => {
 
     res.json(autos);
   } catch (error) {
-    res.status(500).json({ error: "Error cargando inventario" });
-  }
+    res.status(500).json({ 
+  error: "Error cargando inventario",
+  detalle: error.message 
 });
 
 const PORT = process.env.PORT || 3000;
