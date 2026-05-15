@@ -8,7 +8,13 @@ app.use(cors());
 
 app.get("/autos", async (req, res) => {
   try {
-    const { data } = await axios.get("https://somosautos.mx/inventario", {
+    const urls = [
+  "https://somosautos.mx/inventario",
+  "https://somosautos.mx/inventario/page/2",
+  "https://somosautos.mx/inventario/page/3",
+  "https://somosautos.mx/inventario/page/4",
+  "https://somosautos.mx/inventario/page/5"
+];
       headers: { "User-Agent": "Mozilla/5.0" }
     });
 
