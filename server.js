@@ -8,13 +8,17 @@ app.use(cors());
 
 app.get("/autos", async (req, res) => {
   try {
-    const urls = [
-      "https://somosautos.mx/inventario",
-      "https://somosautos.mx/inventario/page/2",
-      "https://somosautos.mx/inventario/page/3",
-      "https://somosautos.mx/inventario/page/4",
-      "https://somosautos.mx/inventario/page/5"
-    ];
+    const urls = [];
+
+for (let i = 1; i <= 60; i++) {
+
+  if (i === 1) {
+    urls.push("https://somosautos.mx/inventario");
+  } else {
+    urls.push(`https://somosautos.mx/inventario/page/${i}`);
+  }
+
+}
 
     const autos = [];
 
