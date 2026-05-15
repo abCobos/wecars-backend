@@ -11,13 +11,11 @@ app.get("/autos", async (req, res) => {
     const urls = [];
 
 for (let i = 1; i <= 60; i++) {
-
   if (i === 1) {
     urls.push("https://somosautos.mx/inventario");
   } else {
-    urls.push(`https://somosautos.mx/inventario/page/${i}`);
+    urls.push(`https://somosautos.mx/inventario?pagina=${i}`);
   }
-
 }
 
     const autos = [];
