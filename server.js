@@ -9,8 +9,61 @@ app.use(cors());
 app.get("/autos", async (req, res) => {
   try {
     const autos = [];
+let pagina = 1;
+let seguir = true;
 
-    for (let i = 1; i <= 60; i++) {
+while (seguir) {
+
+  const url = pagina === 1
+    ? "https://somosautos.mx/inventario"
+    : `https://somosautos.mx/inventario?pagina=${pagina}`;
+
+  console.log("Leyendo:", url);
+
+  const { data } = await axios.get(url, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+    timeout: 15000
+  });
+
+  const $ = cheerio.load(data);
+
+  let encontrados = 0;
+
+  $("a[href*='/vehiculo/']").each((index, el) => {
+
+    const nombre = $(el)
+      .text()
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const bloque = $(el)
+      .parent()
+      .parent()
+      .text()
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const precioMatch = bloque.match(/Contado\s*\$([\d,]+)/);
+
+    if (precioMatch) {
+
+      encontrados++;
+
+      autos.push({
+        nombre,
+        precio: Number(precioMatch[1].replace(/,/g, ""))
+      });
+    }
+  });
+
+  console.log("Autos encontrados:", encontrados);
+
+  if (encontrados < 3) {
+    seguir = false;
+  }
+
+  pagina++;
+}
       const url = i === 1
         ? "https://somosautos.mx/inventario"
         : `https://somosautos.mx/inventario?pagina=${i}`;
