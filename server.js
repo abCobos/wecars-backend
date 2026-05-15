@@ -9,92 +9,46 @@ app.use(cors());
 app.get("/autos", async (req, res) => {
   try {
     const autos = [];
-let pagina = 1;
-let seguir = true;
 
-while (seguir) {
-
-  const url = pagina === 1
-    ? "https://somosautos.mx/inventario"
-    : `https://somosautos.mx/inventario?pagina=${pagina}`;
-
-  console.log("Leyendo:", url);
-
-  const { data } = await axios.get(url, {
-    headers: { "User-Agent": "Mozilla/5.0" },
-    timeout: 15000
-  });
-
-  const $ = cheerio.load(data);
-
-  let encontrados = 0;
-
-  $("a[href*='/vehiculo/']").each((index, el) => {
-
-    const nombre = $(el)
-      .text()
-      .replace(/\s+/g, " ")
-      .trim();
-
-    const bloque = $(el)
-      .parent()
-      .parent()
-      .text()
-      .replace(/\s+/g, " ")
-      .trim();
-
-    const precioMatch = bloque.match(/Contado\s*\$([\d,]+)/);
-
-    if (precioMatch) {
-
-      encontrados++;
-
-      autos.push({
-        nombre,
-        precio: Number(precioMatch[1].replace(/,/g, ""))
-      });
-    }
-  });
-
-  console.log("Autos encontrados:", encontrados);
-
-  if (encontrados < 3) {
-    seguir = false;
-  }
-
-  pagina++;
-}
-      const url = i === 1
-        ? "https://somosautos.mx/inventario"
-        : `https://somosautos.mx/inventario?pagina=${i}`;
+    for (let pagina = 1; pagina <= 60; pagina++) {
+      const url =
+        pagina === 1
+          ? "https://somosautos.mx/inventario"
+          : `https://somosautos.mx/inventario?pagina=${pagina}`;
 
       const { data } = await axios.get(url, {
-        headers: { "User-Agent": "Mozilla/5.0" },
+        headers: {
+          "User-Agent": "Mozilla/5.0"
+        },
         timeout: 15000
       });
 
       const $ = cheerio.load(data);
 
       $("a[href*='/vehiculo/']").each((index, el) => {
-        const card = $(el).closest("div");
-
         let nombre = $(el).text().replace(/\s+/g, " ").trim();
 
-        let bloque = $(el).parent().parent().text().replace(/\s+/g, " ").trim();
-
-        let precioMatch = bloque.match(/Contado\s*\$([\d,]+)/);
-
-        if (!precioMatch) return;
-
-        let precio = Number(precioMatch[1].replace(/,/g, ""));
-
-        nombre = nombre
-          .replace(/Ver Más/gi, "")
+        const bloque = $(el)
+          .closest("div")
+          .parent()
+          .parent()
+          .text()
           .replace(/\s+/g, " ")
           .trim();
 
+        const precioMatch = bloque.match(/Contado\s*\$([\d,]+)/);
+
+        if (!precioMatch) return;
+
+        const precio = Number(precioMatch[1].replace(/,/g, ""));
+
+        nombre = nombre.replace(/Ver Más/gi, "").replace(/\s+/g, " ").trim();
+
         if (nombre && precio > 50000) {
-          autos.push({ nombre, precio });
+          autos.push({
+            nombre,
+            precio
+          });
         }
       });
     }
@@ -104,6 +58,7 @@ while (seguir) {
 
     for (const auto of autos) {
       const clave = `${auto.nombre}-${auto.precio}`;
+
       if (!vistos.has(clave)) {
         vistos.add(clave);
         unicos.push(auto);
@@ -124,4 +79,7 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Servidor iniciado en puerto " + PORT));
+
+app.listen(PORT, () => {
+  console.log("Servidor iniciado en puerto " + PORT);
+});
