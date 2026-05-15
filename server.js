@@ -8,30 +8,48 @@ app.use(cors());
 
 const tipos = [1, 3, 4, 6, 10];
 
+const marcas = [
+  "Acura", "Alfa Romeo", "Audi", "BAIC", "BMW", "Buick", "BYD",
+  "Cadillac", "Chevrolet", "Chirey", "Chrysler", "Dodge", "Dongfeng",
+  "Fiat", "Ford", "GMC", "Honda", "Hyundai", "Infiniti", "Isuzu",
+  "JAC", "Jaguar", "Jeep", "Kia", "Land Rover", "Lexus", "Lincoln",
+  "Mazda", "Mercedes-Benz", "Mercedes Benz", "MG", "Mini", "Mitsubishi",
+  "Nissan", "Peugeot", "Porsche", "RAM", "Renault", "SEAT", "Subaru",
+  "Suzuki", "Tesla", "Toyota", "Volkswagen", "Volvo", "VW"
+];
+
+function detectarMarca(nombre) {
+  const limpio = nombre.toLowerCase();
+
+  const marcasOrdenadas = marcas.sort((a, b) => b.length - a.length);
+
+  for (const marca of marcasOrdenadas) {
+    if (limpio.includes(marca.toLowerCase())) {
+      if (marca === "Mercedes Benz") return "Mercedes-Benz";
+      if (marca === "VW") return "Volkswagen";
+      return marca;
+    }
+  }
+
+  return "Sin marca";
+}
+
 app.get("/autos", async (req, res) => {
   try {
-
     const autos = [];
     const urls = [];
 
-    // INVENTARIO GENERAL
     urls.push("https://somosautos.mx/inventario");
 
-    // GENERAR URLS AUTOMÁTICAMENTE
     for (const tipo of tipos) {
-
       for (let pagina = 1; pagina <= 14; pagina++) {
-
         urls.push(
           `https://somosautos.mx/inventario?pagina=2&type[0]=${tipo}&page=${pagina}`
         );
-
       }
     }
 
-    // RECORRER URLS
     for (const url of urls) {
-
       console.log("Leyendo:", url);
 
       const { data } = await axios.get(url, {
@@ -44,7 +62,6 @@ app.get("/autos", async (req, res) => {
       const $ = cheerio.load(data);
 
       $("a[href*='/vehiculo/']").each((index, el) => {
-
         let nombre = $(el)
           .text()
           .replace(/\s+/g, " ")
@@ -62,57 +79,43 @@ app.get("/autos", async (req, res) => {
 
         if (!precioMatch) return;
 
-        const precio = Number(
-          precioMatch[1].replace(/,/g, "")
-        );
+        const precio = Number(precioMatch[1].replace(/,/g, ""));
 
         nombre = nombre
           .replace(/Ver Más/gi, "")
           .replace(/\s+/g, " ")
           .trim();
 
-        if (
-          nombre &&
-          precio > 50000
-        ) {
+        const marca = detectarMarca(nombre);
 
+        if (nombre && precio > 50000) {
           autos.push({
+            marca,
             nombre,
             precio
           });
-
         }
-
       });
-
     }
 
-    // ELIMINAR DUPLICADOS
     const unicos = [];
     const vistos = new Set();
 
     for (const auto of autos) {
-
-      const clave = `${auto.nombre}-${auto.precio}`;
+      const clave = `${auto.marca}-${auto.nombre}-${auto.precio}`;
 
       if (!vistos.has(clave)) {
-
         vistos.add(clave);
         unicos.push(auto);
-
       }
-
     }
 
     res.json(unicos);
-
   } catch (error) {
-
     res.status(500).json({
       error: "Error cargando inventario",
       detalle: error.message
     });
-
   }
 });
 
