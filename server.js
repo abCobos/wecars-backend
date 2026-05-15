@@ -6,20 +6,23 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 
+const urls = [
+  "https://somosautos.mx/inventario",
+  "https://somosautos.mx/inventario?pagina=2&type[0]=1",
+  "https://somosautos.mx/inventario?pagina=2&type[0]=2",
+  "https://somosautos.mx/inventario?pagina=2&type[0]=3",
+  "https://somosautos.mx/inventario?pagina=2&type[0]=4",
+  "https://somosautos.mx/inventario?pagina=2&type[0]=6",
+  "https://somosautos.mx/inventario?pagina=2&type[0]=10"
+];
+
 app.get("/autos", async (req, res) => {
   try {
     const autos = [];
 
-    for (let pagina = 1; pagina <= 60; pagina++) {
-      const url =
-        pagina === 1
-          ? "https://somosautos.mx/inventario"
-          : `https://somosautos.mx/inventario?pagina=${pagina}`;
-
+    for (const url of urls) {
       const { data } = await axios.get(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0"
-        },
+        headers: { "User-Agent": "Mozilla/5.0" },
         timeout: 15000
       });
 
@@ -42,13 +45,13 @@ app.get("/autos", async (req, res) => {
 
         const precio = Number(precioMatch[1].replace(/,/g, ""));
 
-        nombre = nombre.replace(/Ver Más/gi, "").replace(/\s+/g, " ").trim();
+        nombre = nombre
+          .replace(/Ver Más/gi, "")
+          .replace(/\s+/g, " ")
+          .trim();
 
         if (nombre && precio > 50000) {
-          autos.push({
-            nombre,
-            precio
-          });
+          autos.push({ nombre, precio });
         }
       });
     }
@@ -58,7 +61,6 @@ app.get("/autos", async (req, res) => {
 
     for (const auto of autos) {
       const clave = `${auto.nombre}-${auto.precio}`;
-
       if (!vistos.has(clave)) {
         vistos.add(clave);
         unicos.push(auto);
