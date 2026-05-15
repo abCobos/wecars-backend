@@ -89,7 +89,29 @@ for (let i = 1; i <= 60; i++) {
 app.get("/", (req, res) => {
   res.send("Backend WeCars funcionando");
 });
+app.get("/debug", async (req, res) => {
+  const urls = [
+    "https://somosautos.mx/inventario",
+    "https://somosautos.mx/inventario?pagina=2",
+    "https://somosautos.mx/inventario?pagina=3"
+  ];
 
+  const resultados = [];
+
+  for (const url of urls) {
+    const { data } = await axios.get(url, {
+      headers: { "User-Agent": "Mozilla/5.0" }
+    });
+
+    resultados.push({
+      url,
+      contieneMazda: data.includes("MAZDA"),
+      largo: data.length
+    });
+  }
+
+  res.json(resultados);
+});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
